@@ -1,4 +1,4 @@
-package minecraft;
+package exceptions;
 
 import com.sun.jdi.Location;
 

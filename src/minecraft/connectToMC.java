@@ -34,6 +34,12 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 
+import exceptions.alreadyConnectedToThisVM;
+import exceptions.breakPointNotHitException;
+import exceptions.cannotFindBreakPointException;
+import exceptions.couldNotFindVariableException;
+import exceptions.threadNotFoundException;
+
 public class connectToMC {
 	private static VirtualMachine vm;
 

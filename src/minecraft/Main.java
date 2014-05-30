@@ -26,6 +26,11 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.tools.*;
 
+import exceptions.breakPointNotHitException;
+import exceptions.cannotFindBreakPointException;
+import exceptions.couldNotFindVariableException;
+import exceptions.threadNotFoundException;
+
 import java.io.*;
 
 import javax.swing.JButton;

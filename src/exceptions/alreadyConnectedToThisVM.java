@@ -1,4 +1,4 @@
-package minecraft;
+package exceptions;
 
 public class alreadyConnectedToThisVM extends Exception {
 
