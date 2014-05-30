@@ -8,6 +8,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 
 import java.awt.SystemColor;
+import java.awt.event.ActionEvent;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -27,6 +28,7 @@ public class initialDisplay extends Display {
 	private final JLabel lblRunningThreads = new JLabel("Running Threads");
 	private final JTree tree = new JTree();
 	private boolean realThreads = true;
+	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh Threads"},130, 650, 100, 50);
 
 	public initialDisplay(int w, int h, JFrame f, GUI program) {
 		super(w, h, f, program);
@@ -43,6 +45,7 @@ public class initialDisplay extends Display {
 		add(treeView);
 		tree.getSelectionModel().setSelectionMode
 		(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		add(refreshButton);
 
 
 
@@ -70,7 +73,7 @@ public class initialDisplay extends Display {
 		repaint();
 
 	}
-	private void refreshThreads() throws IncompatibleThreadStateException, InterruptedException, breakPointNotHitException{
+	public void refreshThreads() throws IncompatibleThreadStateException, InterruptedException, breakPointNotHitException{
 		if(realThreads ){
 			tree.setModel(new DefaultTreeModel(
 					new DefaultMutableTreeNode("Threads") {

@@ -124,15 +124,15 @@ public class connectToMC {
 		VirtualMachineManager vmm = com.sun.jdi.Bootstrap.virtualMachineManager();
 		AttachingConnector atconn = null;
 		for(AttachingConnector i: vmm.attachingConnectors()){
-			if("local".equalsIgnoreCase(i.transport().name())){
+			if("dt_socket".equalsIgnoreCase(i.transport().name())){
 				atconn = i;
 				break;
 			}
 		}
 		Map<String, Argument> prm = atconn.defaultArguments();
 		if(vm==null){
-		prm.get("pid").setValue(port);
-		prm.get("timeout").setValue("10000");
+		prm.get("port").setValue(port);
+		//prm.get("timeout").setValue("10000");
 		vm = atconn.attach(prm);
 
 		System.out.println("CONNECTED");}
@@ -165,7 +165,7 @@ public class connectToMC {
 	public static Location breakPoint(ThreadReference thread) throws IncompatibleThreadStateException {
 		if(thread==null){
 			for(ThreadReference r : vm.allThreads())System.out.println(r);
-			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("0001")); i++){
+			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("AWT")); i++){
 		thread = vm.allThreads().get(i);}}
 		thread.suspend();
 		List<StackFrame> frames = thread.frames();
