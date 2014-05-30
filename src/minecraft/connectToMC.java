@@ -34,7 +34,7 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 
-import exceptions.alreadyConnectedToThisVM;
+import exceptions.alreadyConnectedToVM;
 import exceptions.breakPointNotHitException;
 import exceptions.cannotFindBreakPointException;
 import exceptions.couldNotFindVariableException;
@@ -46,8 +46,8 @@ public class connectToMC {
 	public synchronized static Value invokeMethod(String port, String threadName, String methodName, String variableName, String methodToInvoke, List<String> arguments, List<Value> params) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
 		try {
 			createConnection(port);
-		} catch (alreadyConnectedToThisVM e) {
-			//Do nothin as this is ok
+		} catch (alreadyConnectedToVM e) {
+			//Do nothing as this is ok
 		}
 		List<ThreadReference> threads = null;
 		long startTime = System.currentTimeMillis();
@@ -63,16 +63,115 @@ public class connectToMC {
 			}
 		}
 		if(thread==null){
-			vm.dispose();
-			vm=null;
+			
 			throw new threadNotFoundException(port, threadName);
 		}
 
+		Location breakLoc = breakPoint(thread);
+		
+		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
+		List<StackFrame> frames2 = thread2.frames();
+		for(StackFrame frame : frames2){
+			try {
+				for(LocalVariable var : frame.visibleVariables()){
+					if(var.name().equalsIgnoreCase(variableName)){
+						ObjectReference ref = (ObjectReference)frame.getValue(var);
+						List<Method> methods = ref.referenceType().methodsByName(methodToInvoke);
+						Method method = null;
+						for(Method m : methods){
+							if(m.argumentTypeNames().containsAll(arguments)){
+								method = m;
+								break;
+							}
+						}
+						System.out.println("STATS: " + vm.toString());
+						Value retVal = ref.invokeMethod(thread2, method, params,  0);
+						
+						return retVal;
+					}
+				}
+			} catch (AbsentInformationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		throw new couldNotFindVariableException(port, threadName, methodName, variableName);
+	}
+	
+	public synchronized static Value getValueOfField(String port, String threadName, String methodName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
+		
+		
+		try {
+			createConnection(port);
+		} catch (alreadyConnectedToVM e) {
+			//Do nothing because this is ok
+		}
+		List<ReferenceType> n = vm.allClasses();
+		for(ReferenceType t : n){
+			System.out.println(t);
+		}
+		List<String> args = new ArrayList<String>();
+		args.add("java.lang.String");
+		List<Value> params = new ArrayList<Value>();
+		params.add(vm.mirrorOf(fieldName));
+		return invokeMethod(port, threadName, methodName, variableName, "fieldByName", args, params);
+	}
+
+
+	public static void createConnection(String port) throws IOException, IllegalConnectorArgumentsException, alreadyConnectedToVM{
+		VirtualMachineManager vmm = com.sun.jdi.Bootstrap.virtualMachineManager();
+		AttachingConnector atconn = null;
+		for(AttachingConnector i: vmm.attachingConnectors()){
+			if("local".equalsIgnoreCase(i.transport().name())){
+				atconn = i;
+				break;
+			}
+		}
+		Map<String, Argument> prm = atconn.defaultArguments();
+		if(vm==null){
+		prm.get("pid").setValue(port);
+		prm.get("timeout").setValue("10000");
+		vm = atconn.attach(prm);
+
+		System.out.println("CONNECTED");}
+		else{
+			throw new alreadyConnectedToVM(port);
+		}
+	}
+	
+	public static StringReference mirrorOf(String port, String str){
+		try {
+			createConnection(port);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalConnectorArgumentsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (alreadyConnectedToVM e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		StringReference v = vm.mirrorOf(str);
+		return v;
+	}
+	
+	public static VirtualMachine getVM(){
+		return vm;
+	}
+
+	public static Location breakPoint(ThreadReference thread) throws IncompatibleThreadStateException {
+		if(thread==null){
+			for(ThreadReference r : vm.allThreads())System.out.println(r);
+			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("0001")); i++){
+		thread = vm.allThreads().get(i);}}
 		thread.suspend();
 		List<StackFrame> frames = thread.frames();
 		Location breakLoc = null;
-		startTime = System.currentTimeMillis();
-		timeOut = 4000;//Same as above
+		long startTime = System.currentTimeMillis();
+		long timeOut = 4000;//Same as above
 		outer: for(long time = 0; time<timeOut; time = System.currentTimeMillis()-startTime){
 			for(int i = 0 ; i < frames.size(); i++){
 				System.out.println("FRAME: " + frames.get(i));
@@ -82,19 +181,17 @@ public class connectToMC {
 				}
 			}
 		}
-		if(breakLoc==null){
-			vm.dispose();
-			vm=null;
-			throw new cannotFindBreakPointException(port, threadName, methodName, variableName);
-		}
 		EventRequestManager evReqMan = vm.eventRequestManager();
 		BreakpointRequest bpReq = evReqMan.createBreakpointRequest(breakLoc);
 		bpReq.enable();
 		thread.resume();
+		return breakLoc;
+	}
+	public static ThreadReference waitUntilBreakPointIsReached(Location breakLoc) throws InterruptedException, breakPointNotHitException{
 		ThreadReference thread2 = null; //Same thread just as above, just after break was hit
 		EventQueue evtQueue = vm.eventQueue();
-		startTime = System.currentTimeMillis();
-		timeOut = 10000;
+		long startTime = System.currentTimeMillis();
+		long timeOut = 10000;
 		outer: for(long time = 0; time<timeOut && thread2==null; time = System.currentTimeMillis()-startTime){
 			EventSet evtSet = evtQueue.remove();
 			EventIterator evtIter = evtSet.eventIterator();
@@ -115,96 +212,9 @@ public class connectToMC {
 			}//evtSet.resume();
 		}
 		if(thread2==null){
-			vm.dispose();
-			vm=null;
+			
 			throw new breakPointNotHitException(breakLoc);
 		}
-		List<StackFrame> frames2 = thread2.frames();
-		for(StackFrame frame : frames2){
-			try {
-				for(LocalVariable var : frame.visibleVariables()){
-					if(var.name().equalsIgnoreCase(variableName)){
-						ObjectReference ref = (ObjectReference)frame.getValue(var);
-						List<Method> methods = ref.referenceType().methodsByName(methodToInvoke);
-						Method method = null;
-						for(Method m : methods){
-							if(m.argumentTypeNames().containsAll(arguments)){
-								method = m;
-								break;
-							}
-						}
-						Value retVal = ref.invokeMethod(thread2, method, params,  0);
-						vm.dispose();
-						vm=null;
-						return retVal;
-					}
-				}
-			} catch (AbsentInformationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		vm.dispose();
-		vm=null;
-		throw new couldNotFindVariableException(port, threadName, methodName, variableName);
-	}
-	
-	public synchronized static Value getValueOfField(String port, String threadName, String methodName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
-		
-		
-		try {
-			createConnection(port);
-		} catch (alreadyConnectedToThisVM e) {
-			//Do nothing because this is ok
-		}
-		List<ReferenceType> n = vm.allClasses();
-		for(ReferenceType t : n){
-			System.out.println(t);
-		}
-		List<String> args = new ArrayList<String>();
-		args.add("java.lang.String");
-		List<Value> params = new ArrayList<Value>();
-		params.add(vm.mirrorOf(fieldName));
-		return invokeMethod(port, threadName, methodName, variableName, "fieldByName", args, params);
-	}
-
-
-	private static void createConnection(String port) throws IOException, IllegalConnectorArgumentsException, alreadyConnectedToThisVM{
-		VirtualMachineManager vmm = com.sun.jdi.Bootstrap.virtualMachineManager();
-		AttachingConnector atconn = null;
-		for(AttachingConnector i: vmm.attachingConnectors()){
-			if("dt_socket".equalsIgnoreCase(i.transport().name())){
-				atconn = i;
-				break;
-			}
-		}
-		Map<String, Argument> prm = atconn.defaultArguments();
-		if(vm==null || (vm!=null && !vmm.connectedVirtualMachines().contains(vm))){
-		prm.get("port").setValue(port);
-		vm = atconn.attach(prm);
-
-		System.out.println("CONNECTED");}
-		else{
-			throw new alreadyConnectedToThisVM(port);
-		}
-	}
-	
-	public static StringReference mirrorOf(String port, String str){
-		try {
-			createConnection(port);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalConnectorArgumentsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (alreadyConnectedToThisVM e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		StringReference v = vm.mirrorOf(str);
-		vm.dispose();vm=null;
-		return v;
+		return thread2;
 	}
 }

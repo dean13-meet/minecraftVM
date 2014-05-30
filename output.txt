@@ -82,4 +82,4 @@ Exception in thread "main" com.sun.jdi.VMDisconnectedException: connection is cl
 	at com.sun.tools.jdi.ObjectReferenceImpl.invokeMethod(ObjectReferenceImpl.java:349)
 	at minecraft.connectToMC.invokeMethod(connectToMC.java:130)
 	at minecraft.Main.main22(Main.java:108)
-	at minecraft.Main.main(Main.java:47)
+	at minecraft.Main.main(Main.java:47) nj

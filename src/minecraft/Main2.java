@@ -11,7 +11,13 @@ public class Main2 {
 	
 	public static void main(final String[] args) throws FileNotFoundException{
 		
-		
+		try {
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt")),true));
+			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt")),true));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		System.out.println("RUNNING MAIN2");
 		Thread t = new Thread(new Runnable(){
 
@@ -32,11 +38,7 @@ public class Main2 {
 
 		t.setName(Main.name);
 
-		 System.setOut(new PrintStream(new OutputStream() {
-             public void write(int b) {
-                 //DO NOTHING
-             }
-         }));
+		 
 		t.start();
 	}
 }
