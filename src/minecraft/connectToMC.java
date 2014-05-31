@@ -49,6 +49,73 @@ public class connectToMC {
 		} catch (alreadyConnectedToVM e) {
 			//Do nothing as this is ok
 		}
+		ThreadReference thread = getThread(threadName);
+		Location breakLoc = breakPoint(thread);
+		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
+		Value val = getLocalVarValueInThread(thread2, variableName);
+		ObjectReference ref = (ObjectReference)val;
+		
+		List<Method> methods = ref.referenceType().methodsByName(methodToInvoke);
+		Method method = null;
+		for(Method m : methods){
+			if(m.argumentTypeNames().containsAll(arguments)){
+				method = m;
+				break;
+			}
+		}
+		System.out.println("STATS: " + vm.toString());
+		Value retVal = ref.invokeMethod(thread2, method, params,  0);
+
+		return retVal;
+		
+	}
+
+
+	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
+
+		try {
+			createConnection(port);
+		} catch (alreadyConnectedToVM e) {
+			//Do nothing because this is ok
+		}
+		ThreadReference thread = getThread(threadName);
+		Location breakLoc = breakPoint(thread);
+		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
+		Value val = getLocalVarValueInThread(thread2, variableName);
+		return val;
+	}
+	public synchronized static Value getValueOfFieldOfLocalVar(String port, String threadName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
+		ObjectReference val = (ObjectReference) getValueOfLocalVar(port, threadName, variableName);
+		return val.getValue(val.referenceType().fieldByName(fieldName));
+	}
+	public synchronized static void setValueOfFieldOfLocalVar(String port, String threadName, String variableName, String fieldName, Value toSet) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
+		ObjectReference val = (ObjectReference) getValueOfLocalVar(port, threadName, variableName);
+		val.setValue(val.referenceType().fieldByName(fieldName), toSet);
+	}
+
+
+
+
+
+private static Value getLocalVarValueInThread(ThreadReference thread,
+		String variableName) throws IncompatibleThreadStateException, couldNotFindVariableException {
+	List<StackFrame> frames = thread.frames();
+	for(StackFrame frame : frames){
+		try {
+			for(LocalVariable var : frame.visibleVariables()){
+				if(var.name().equalsIgnoreCase(variableName)){
+				return frame.getValue(var);
+				}
+				}
+		}catch (AbsentInformationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	throw new couldNotFindVariableException(thread.name(), variableName);
+	}
+
+	public static ThreadReference getThread(String threadName) throws threadNotFoundException{
 		List<ThreadReference> threads = null;
 		long startTime = System.currentTimeMillis();
 		long timeOut = 4000;
@@ -63,61 +130,12 @@ public class connectToMC {
 			}
 		}
 		if(thread==null){
-			
-			throw new threadNotFoundException(port, threadName);
-		}
 
-		Location breakLoc = breakPoint(thread);
-		
-		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
-		List<StackFrame> frames2 = thread2.frames();
-		for(StackFrame frame : frames2){
-			try {
-				for(LocalVariable var : frame.visibleVariables()){
-					if(var.name().equalsIgnoreCase(variableName)){
-						ObjectReference ref = (ObjectReference)frame.getValue(var);
-						List<Method> methods = ref.referenceType().methodsByName(methodToInvoke);
-						Method method = null;
-						for(Method m : methods){
-							if(m.argumentTypeNames().containsAll(arguments)){
-								method = m;
-								break;
-							}
-						}
-						System.out.println("STATS: " + vm.toString());
-						Value retVal = ref.invokeMethod(thread2, method, params,  0);
-						
-						return retVal;
-					}
-				}
-			} catch (AbsentInformationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			throw new threadNotFoundException(threadName);
 		}
-		
-		
-		throw new couldNotFindVariableException(port, threadName, methodName, variableName);
+		return thread;
 	}
 	
-	public synchronized static Value getValueOfField(String port, String threadName, String methodName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
-		
-		
-		try {
-			createConnection(port);
-		} catch (alreadyConnectedToVM e) {
-			//Do nothing because this is ok
-		}
-		List<ReferenceType> n = vm.allClasses();
-		for(ReferenceType t : n){
-			System.out.println(t);
-		}
-		List<String> args = new ArrayList<String>();
-		args.add("java.lang.String");
-		List<Value> params = new ArrayList<Value>();
-		params.add(vm.mirrorOf(fieldName));
-		return invokeMethod(port, threadName, methodName, variableName, "fieldByName", args, params);
-	}
 
 
 	public static void createConnection(String port) throws IOException, IllegalConnectorArgumentsException, alreadyConnectedToVM{
@@ -131,16 +149,16 @@ public class connectToMC {
 		}
 		Map<String, Argument> prm = atconn.defaultArguments();
 		if(vm==null){
-		prm.get("port").setValue(port);
-		//prm.get("timeout").setValue("10000");
-		vm = atconn.attach(prm);
+			prm.get("port").setValue(port);
+			//prm.get("timeout").setValue("10000");
+			vm = atconn.attach(prm);
 
-		System.out.println("CONNECTED");}
+			System.out.println("CONNECTED");}
 		else{
 			throw new alreadyConnectedToVM(port);
 		}
 	}
-	
+
 	public static StringReference mirrorOf(String port, String str){
 		try {
 			createConnection(port);
@@ -157,7 +175,7 @@ public class connectToMC {
 		StringReference v = vm.mirrorOf(str);
 		return v;
 	}
-	
+
 	public static VirtualMachine getVM(){
 		return vm;
 	}
@@ -166,7 +184,7 @@ public class connectToMC {
 		if(thread==null){
 			for(ThreadReference r : vm.allThreads())System.out.println(r);
 			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("AWT")); i++){
-		thread = vm.allThreads().get(i);}}
+				thread = vm.allThreads().get(i);}}
 		thread.suspend();
 		List<StackFrame> frames = thread.frames();
 		Location breakLoc = null;
@@ -212,7 +230,7 @@ public class connectToMC {
 			}//evtSet.resume();
 		}
 		if(thread2==null){
-			
+
 			throw new breakPointNotHitException(breakLoc);
 		}
 		return thread2;

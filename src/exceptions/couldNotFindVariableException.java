@@ -2,9 +2,7 @@ package exceptions;
 
 public class couldNotFindVariableException extends Exception {
 
-	public couldNotFindVariableException(String port, String threadName,
-			String methodName, String variableName) {
-		super("Could not find variable: " + variableName + " in: (port, thread, method)" + port + threadName + methodName);
+	public couldNotFindVariableException(String threadName, String variableName) {
+		super("Could not find variable: " + variableName + " in: (thread)" + threadName);
 	}
-
 }

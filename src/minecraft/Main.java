@@ -67,7 +67,33 @@ public class Main {
 
 
 
-		System.out.println("RUNNING MAIN1");
+		try {
+			System.out.println("RUNNING MAIN1" + ((ArrayReference)connectToMC.getValueOfFieldOfLocalVar(args[0], name, "frame", "remainderArgs")).getValues());
+		} catch (threadNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (AbsentInformationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (cannotFindBreakPointException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (breakPointNotHitException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InvalidTypeException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotLoadedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InvocationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (couldNotFindVariableException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		try {
 			connectToMC.createConnection(args[0]);
 		} catch (alreadyConnectedToVM e) {
