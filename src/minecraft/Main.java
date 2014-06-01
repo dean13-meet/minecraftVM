@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.mojang.launcher.OperatingSystem;
 import com.sun.jdi.*;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector.Argument;
@@ -67,6 +68,10 @@ public class Main {
 
 
 
+		File f = new File("/Users/Dean_Leitersdorf/Documents/workspace/minecraft/bin/");
+		ProcessBuilder builder = new ProcessBuilder(new String[] {"java.exe",f.getAbsolutePath() + "/minecraft/Main2.class","-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=4000"});
+		Process process = builder.start();
+		/*
 		try {
 			System.out.println("RUNNING MAIN1" + ((ArrayReference)connectToMC.getValueOfFieldOfLocalVar(args[0], name, "frame", "remainderArgs")).getValues());
 		} catch (threadNotFoundException e1) {
@@ -101,7 +106,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		new GUI();
-
+*/
 		/*
 		ArrayList<String> argos = new ArrayList<String>();
 		argos.add("java.lang.String");
