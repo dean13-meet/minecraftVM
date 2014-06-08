@@ -9,6 +9,7 @@ import javax.swing.JTree;
 
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -21,8 +22,10 @@ import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.Location;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.event.EventSet;
 
+import exceptions.alreadyConnectedToVM;
 import exceptions.breakPointNotHitException;
 
 public class initialDisplay extends Display {
@@ -66,12 +69,28 @@ public class initialDisplay extends Display {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("PAINTING");
+		
 		repaint();
 
 	}
 	public void refreshThreads() {
+		try {
+			connectToMC.createConnection(Main.getPort());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalConnectorArgumentsException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (alreadyConnectedToVM e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if(realThreads ){
+			EventSet evtSet = null;
+			try {
+				evtSet = connectToMC.waitUntilBreakPointIsReached(connectToMC.breakPoint(null));
+			
 			tree.setModel(new DefaultTreeModel(
 					new DefaultMutableTreeNode("Threads") {
 						{for(ThreadReference thread : connectToMC.getVM().allThreads()){
@@ -92,7 +111,21 @@ public class initialDisplay extends Display {
 						}
 					}
 					));
-		}else{
+		}
+		 catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (breakPointNotHitException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IncompatibleThreadStateException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}finally{
+			if(evtSet!=null)evtSet.resume();
+		}
+			}
+		else{
 			tree.setModel(new DefaultTreeModel(
 					new DefaultMutableTreeNode("Threads") {
 						{
@@ -115,6 +148,7 @@ public class initialDisplay extends Display {
 					}
 					));
 		}
+		connectToMC.releaseConnection();
 	}
 
 }

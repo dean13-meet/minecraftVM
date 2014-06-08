@@ -230,6 +230,11 @@ private static Value getLocalVarValueInThread(ThreadReference thread,
 			throw new alreadyConnectedToVM(port);
 		}
 	}
+	public static void releaseConnection(){
+		if(vm!=null){
+			vm.resume();vm.dispose();vm=null;
+		}
+	}
 
 	public static StringReference mirrorOf(String port, String str){
 		try {

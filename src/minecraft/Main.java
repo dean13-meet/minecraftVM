@@ -41,9 +41,11 @@ import javax.swing.JButton;
 public class Main {
 
 	public final static String name = "Thread-0001";
+	private static String port;
 
 	public static void main(final String[] args) throws InterruptedException{
 
+		port = args[0];
 		try {
 			main22(args);
 		} catch (IOException e) {
@@ -64,9 +66,12 @@ public class Main {
 		}
 	}
 
+	public static String getPort(){
+		return port;
+	}
 	public static void main22(final String[] args) throws IOException, IllegalConnectorArgumentsException, IncompatibleThreadStateException, InterruptedException{
 
-		System.out.println(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "processBuilder")));
+		System.out.println(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "frame")));
 
 /*
 		File f = new File("/Users/Dean_Leitersdorf/Documents/workspace/minecraft/bin/");
@@ -108,6 +113,7 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
+		connectToMC.releaseConnection();
 		GUI g = new GUI();
 
 		/*
