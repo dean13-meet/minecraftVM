@@ -21,6 +21,7 @@ import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.Location;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
+import com.sun.jdi.event.EventSet;
 
 import exceptions.breakPointNotHitException;
 
@@ -49,18 +50,7 @@ public class initialDisplay extends Display {
 
 
 
-		try {
-			refreshThreads();
-		} catch (IncompatibleThreadStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (breakPointNotHitException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		refreshThreads();
 		repaint();
 
 
@@ -73,12 +63,11 @@ public class initialDisplay extends Display {
 		repaint();
 
 	}
-	public void refreshThreads() throws IncompatibleThreadStateException, InterruptedException, breakPointNotHitException{
+	public void refreshThreads() {
 		if(realThreads ){
 			tree.setModel(new DefaultTreeModel(
 					new DefaultMutableTreeNode("Threads") {
-						{connectToMC.waitUntilBreakPointIsReached(connectToMC.breakPoint(null));
-							for(ThreadReference thread : connectToMC.getVM().allThreads()){
+						{for(ThreadReference thread : connectToMC.getVM().allThreads()){
 								
 								
 								DefaultMutableTreeNode node_1;
@@ -92,7 +81,7 @@ public class initialDisplay extends Display {
 								}
 								add(node_1);
 							}
-
+							
 						}
 					}
 					));

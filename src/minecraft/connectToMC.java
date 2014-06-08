@@ -51,8 +51,11 @@ public class connectToMC {
 		}
 		ThreadReference thread = getThread(threadName);
 		Location breakLoc = breakPoint(thread);
-		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
-		Value val = getLocalVarValueInThread(thread2, variableName);
+		EventSet evtSet = waitUntilBreakPointIsReached(breakLoc);
+		Value retVal = null;
+		try{
+		Value val = getLocalVarValueInThread(thread, variableName);
+		
 		ObjectReference ref = (ObjectReference)val;
 		
 		List<Method> methods = ref.referenceType().methodsByName(methodToInvoke);
@@ -64,14 +67,17 @@ public class connectToMC {
 			}
 		}
 		System.out.println("STATS: " + vm.toString());
-		Value retVal = ref.invokeMethod(thread2, method, params,  0);
+		retVal  = ref.invokeMethod(thread, method, params,  0);}
+		finally{
 
+		evtSet.resume();}
+		
 		return retVal;
 		
 	}
 
 
-	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
+	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException,  AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, IncompatibleThreadStateException{
 
 		try {
 			createConnection(port);
@@ -80,8 +86,18 @@ public class connectToMC {
 		}
 		ThreadReference thread = getThread(threadName);
 		Location breakLoc = breakPoint(thread);
-		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
-		Value val = getLocalVarValueInThread(thread, variableName);
+		EventSet evtSet = waitUntilBreakPointIsReached(breakLoc);
+		Value val = null;
+		try {
+			val = getLocalVarValueInThread(thread, variableName);
+		} catch (IncompatibleThreadStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (couldNotFindVariableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+		evtSet.resume();}
 		return val;
 	}
 	public synchronized static Value getValueOfFieldOfLocalVar(String port, String threadName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
@@ -110,6 +126,7 @@ public class connectToMC {
 		} 
 		for(ThreadReference s : vm.allThreads()){
 			try {
+				System.out.println("TESTING: " + s.name());
 				retval = getValueOfLocalVar(port, s.name(), variableName);
 				if(retval!=null)
 					return retval;
@@ -144,9 +161,6 @@ public class connectToMC {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (InvocationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (couldNotFindVariableException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -263,7 +277,7 @@ private static Value getLocalVarValueInThread(ThreadReference thread,
 		thread.resume();
 		return breakLoc;
 	}
-	public static ThreadReference waitUntilBreakPointIsReached(Location breakLoc) throws InterruptedException, breakPointNotHitException{
+	public static EventSet waitUntilBreakPointIsReached(Location breakLoc) throws InterruptedException, breakPointNotHitException{
 		ThreadReference thread2 = null; //Same thread just as above, just after break was hit
 		EventQueue evtQueue = vm.eventQueue();
 		long startTime = System.currentTimeMillis();
@@ -281,17 +295,15 @@ private static Value getLocalVarValueInThread(ThreadReference thread,
 					{
 						BreakpointEvent brEvt = (BreakpointEvent)evt;
 						thread2 = brEvt.thread();
-						//evtSet.resume();
-						break outer;
+						System.out.println("HIT BREAKPOINT : " + thread2);
+						if(thread2!=null)return evtSet;
+						//break outer;
 					}
 				}
-			}//evtSet.resume();
+			}evtSet.resume();
 		}
-		if(thread2==null){
-
-			
+		{//In this case, thread2==null
 			throw new breakPointNotHitException(breakLoc);
 		}
-		return thread2;
 	}
 }

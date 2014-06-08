@@ -24,19 +24,10 @@ class refreshThreadCommand extends ButtonCommands{
 
 	@Override
 	void execute(int caseNum) {
-		try {
+		
 			newD.refreshThreads();
 			System.out.println("Refereshed Threads");
-		} catch (IncompatibleThreadStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (breakPointNotHitException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		
 	}
 	

@@ -25,9 +25,12 @@ public class Main2 {
 				
 			}
 			
-			private void doNothing1(){while(true)doNothing2();};
+			private void doNothing1(){
+				while(true){doNothing2();}};
 			private void doNothing2(){try {
-				Thread.sleep(1);
+				Thread.sleep(10);
+				//System.out.println("WAITING FOR BREAKPOINT");
+				//Above creates a huge print stream :P
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
