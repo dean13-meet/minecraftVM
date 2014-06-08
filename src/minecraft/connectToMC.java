@@ -81,7 +81,7 @@ public class connectToMC {
 		ThreadReference thread = getThread(threadName);
 		Location breakLoc = breakPoint(thread);
 		ThreadReference thread2 = waitUntilBreakPointIsReached(breakLoc);
-		Value val = getLocalVarValueInThread(thread2, variableName);
+		Value val = getLocalVarValueInThread(thread, variableName);
 		return val;
 	}
 	public synchronized static Value getValueOfFieldOfLocalVar(String port, String threadName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
@@ -95,6 +95,64 @@ public class connectToMC {
 
 
 
+	public static Value getValueOfLocalVarInAnyThread(String port, String variableName){
+		Value retval = null;
+		try{
+			createConnection(port);
+		}catch(alreadyConnectedToVM e){
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalConnectorArgumentsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		for(ThreadReference s : vm.allThreads()){
+			try {
+				retval = getValueOfLocalVar(port, s.name(), variableName);
+				if(retval!=null)
+					return retval;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalConnectorArgumentsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (threadNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IncompatibleThreadStateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (AbsentInformationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (cannotFindBreakPointException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (breakPointNotHitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvalidTypeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotLoadedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (couldNotFindVariableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return retval;
+	}
 
 
 private static Value getLocalVarValueInThread(ThreadReference thread,
@@ -181,9 +239,9 @@ private static Value getLocalVarValueInThread(ThreadReference thread,
 	}
 
 	public static Location breakPoint(ThreadReference thread) throws IncompatibleThreadStateException {
-		if(thread==null){
+		if(thread==null||true){
 			for(ThreadReference r : vm.allThreads())System.out.println(r);
-			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("AWT")); i++){
+			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("connector")); i++){
 				thread = vm.allThreads().get(i);}}
 		thread.suspend();
 		List<StackFrame> frames = thread.frames();
@@ -231,6 +289,7 @@ private static Value getLocalVarValueInThread(ThreadReference thread,
 		}
 		if(thread2==null){
 
+			
 			throw new breakPointNotHitException(breakLoc);
 		}
 		return thread2;

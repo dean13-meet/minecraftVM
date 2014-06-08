@@ -66,12 +66,13 @@ public class Main {
 
 	public static void main22(final String[] args) throws IOException, IllegalConnectorArgumentsException, IncompatibleThreadStateException, InterruptedException{
 
+		System.out.println(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "processBuilder")));
 
-
+/*
 		File f = new File("/Users/Dean_Leitersdorf/Documents/workspace/minecraft/bin/");
-		ProcessBuilder builder = new ProcessBuilder(new String[] {"java.exe",f.getAbsolutePath() + "/minecraft/Main2.class","-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=4000"});
+		ProcessBuilder builder = new ProcessBuilder(new String[] {OperatingSystem.getCurrentPlatform().getJavaDir(), f.getAbsolutePath() + "/minecraft/Main2.class","-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=4000"});
 		Process process = builder.start();
-		/*
+
 		try {
 			System.out.println("RUNNING MAIN1" + ((ArrayReference)connectToMC.getValueOfFieldOfLocalVar(args[0], name, "frame", "remainderArgs")).getValues());
 		} catch (threadNotFoundException e1) {
@@ -99,6 +100,8 @@ public class Main {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
+		*/
 		try {
 			connectToMC.createConnection(args[0]);
 		} catch (alreadyConnectedToVM e) {
@@ -106,7 +109,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		new GUI();
-*/
+
 		/*
 		ArrayList<String> argos = new ArrayList<String>();
 		argos.add("java.lang.String");

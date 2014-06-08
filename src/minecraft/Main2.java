@@ -18,6 +18,23 @@ public class Main2 {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		Thread connector = new Thread(new Runnable(){
+
+			public void run() {
+				doNothing1();
+				
+			}
+			
+			private void doNothing1(){while(true)doNothing2();};
+			private void doNothing2(){try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}};
+		});
+		connector.setName("connector");
+		connector.start();
 		System.out.println("RUNNING MAIN2");
 		Thread t = new Thread(new Runnable(){
 
@@ -41,5 +58,8 @@ public class Main2 {
 		 
 		t.start();
 		
+		
+		
 	}
+	
 }
