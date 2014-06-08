@@ -101,14 +101,14 @@ public class Main {
 			e1.printStackTrace();
 		}
 		
-		*/
+		
 		try {
 			connectToMC.createConnection(args[0]);
 		} catch (alreadyConnectedToVM e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		new GUI();
+		}*/
+		GUI g = new GUI();
 
 		/*
 		ArrayList<String> argos = new ArrayList<String>();

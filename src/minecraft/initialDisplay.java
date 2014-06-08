@@ -60,6 +60,13 @@ public class initialDisplay extends Display {
 	protected void paintComponent(Graphics g) {
 
 
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("PAINTING");
 		repaint();
 
 	}
