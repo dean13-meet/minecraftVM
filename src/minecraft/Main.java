@@ -71,8 +71,25 @@ public class Main {
 	}
 	public static void main22(final String[] args) throws IOException, IllegalConnectorArgumentsException, IncompatibleThreadStateException, InterruptedException{
 
-		System.out.println(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "frame")));
+		System.out.println("OBJECT LOOKING FOR: " + ((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "minecraftLauncher")), "launcher")), "gameRunner")));
 
+		ObjectReference ref = ((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "minecraftLauncher")), "launcher")), "gameRunner"));
+/*
+		try {
+			connectToMC.createConnection(args[0]);
+		} catch (alreadyConnectedToVM e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		ThreadReference thread = null;
+		try {
+			ThreadReference thread = connectToMC.getThread("connector");
+		} catch (threadNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 /*
 		File f = new File("/Users/Dean_Leitersdorf/Documents/workspace/minecraft/bin/");
 		ProcessBuilder builder = new ProcessBuilder(new String[] {OperatingSystem.getCurrentPlatform().getJavaDir(), f.getAbsolutePath() + "/minecraft/Main2.class","-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=4000"});

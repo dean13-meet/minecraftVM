@@ -32,3 +32,19 @@ class refreshThreadCommand extends ButtonCommands{
 	}
 	
 }
+class expandAllCommand extends ButtonCommands{
+
+	initialDisplay newD;
+	expandAllCommand(Display d) {
+		super(d);
+		this.newD = (initialDisplay)d;
+	}
+	@Override
+	void execute(int caseNum) {
+		javax.swing.JTree tree = newD.getTree();
+		for (int i = 0; i < tree.getRowCount(); i++) {
+		    tree.expandRow(i);
+		}
+	}
+	
+}

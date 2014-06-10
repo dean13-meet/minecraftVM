@@ -16,10 +16,13 @@ import javax.swing.JButton;
 import javax.swing.JTextArea;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.LocalVariable;
 import com.sun.jdi.Location;
+import com.sun.jdi.ObjectReference;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
@@ -32,7 +35,8 @@ public class initialDisplay extends Display {
 	private final JLabel lblRunningThreads = new JLabel("Running Threads");
 	private final JTree tree = new JTree();
 	private boolean realThreads = true;
-	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh Threads"},130, 650, 100, 50);
+	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh Threads"},130, 625, 100, 50);
+	private final Button expandAllButton = new Button("expandAllButton", new expandAllCommand(this), new String[]{"Expand All"}, 130, 680, 100, 50);
 
 	public initialDisplay(int w, int h, JFrame f, GUI program) {
 		super(w, h, f, program);
@@ -50,7 +54,8 @@ public class initialDisplay extends Display {
 		tree.getSelectionModel().setSelectionMode
 		(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		add(refreshButton);
-
+		add(expandAllButton);
+		
 
 
 		refreshThreads();
@@ -72,6 +77,10 @@ public class initialDisplay extends Display {
 		
 		repaint();
 
+	}
+	
+	public JTree getTree(){
+		return tree;
 	}
 	public void refreshThreads() {
 		try {
@@ -100,7 +109,25 @@ public class initialDisplay extends Display {
 								node_1 = new DefaultMutableTreeNode(thread.name());
 								try{
 									for(StackFrame f : thread.frames()){
-										node_1.add(new DefaultMutableTreeNode(f.location().toString()));
+										
+										DefaultMutableTreeNode node_2 = new DefaultMutableTreeNode(f.location().toString());
+										try{
+										for(LocalVariable v : f.visibleVariables()){
+											if(f.getValue(v) instanceof ObjectReference){
+												System.out.println("IS OBJECT REF: " + v);
+												DefaultMutableTreeNode node_3 = new DefaultMutableTreeNode(v.toString());
+												DefaultMutableTreeNode node_4 = connectToMC.getTreeOfAnyValue(f.getValue(v));
+												node_3.add(node_4);
+												node_2.add(node_3);
+												System.out.println("IS NODE: " + node_2);
+											}
+											else{
+											DefaultMutableTreeNode node_3 = new DefaultMutableTreeNode(v.toString());
+											node_2.add(node_3);}
+										}
+										if(node_2.isLeaf())node_2.add(new DefaultMutableTreeNode("(empty)"));
+										}catch(Exception e){System.out.println("Can't access frame:" +f);e.printStackTrace();}
+										node_1.add(node_2);
 									}
 								}catch (Exception e){
 									e.printStackTrace();
@@ -150,5 +177,7 @@ public class initialDisplay extends Display {
 		}
 		connectToMC.releaseConnection();
 	}
+	
+	
 
 }
