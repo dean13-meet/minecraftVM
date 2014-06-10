@@ -34,7 +34,7 @@ public abstract class Display extends JComponent {
 
 	}
 
-	abstract protected void setPanel();
+	abstract protected void init();
 
 	protected abstract void paintComponent(Graphics g);
 }

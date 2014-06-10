@@ -126,16 +126,16 @@ public class connectToMC {
 		v.setValue(v.referenceType().fieldByName(fieldName), toSet);
 	}
 
-	private static List<Value> analyzed = new ArrayList<Value>();
+	public static List<Value> analyzed = new ArrayList<Value>();
 
 	//Must be synchronized cuz uses analyzed list above which is static
 	public synchronized static DefaultMutableTreeNode getTreeOfAnyValue(Value toBeAnalyzed){
 		analyzed.add(toBeAnalyzed);
 		DefaultMutableTreeNode retval;
 		if(toBeAnalyzed!=null)
-			retval = new DefaultMutableTreeNode(toBeAnalyzed.toString());
+			retval = new DefaultMutableTreeNode((toBeAnalyzed instanceof LocalVariable ? ((LocalVariable)toBeAnalyzed).signature() + " " : toBeAnalyzed instanceof com.sun.jdi.Field ? ((com.sun.jdi.Field)toBeAnalyzed).signature()+ " " : "")+toBeAnalyzed.toString() + " (not broken down)");
 		else{
-			retval = new DefaultMutableTreeNode(null);
+			retval = new DefaultMutableTreeNode((toBeAnalyzed instanceof LocalVariable ? ((LocalVariable)toBeAnalyzed).signature() + " " : toBeAnalyzed instanceof com.sun.jdi.Field ? ((com.sun.jdi.Field)toBeAnalyzed).signature()+ " " : "")+"null" + " (not broken down)");
 			return retval;
 		}
 		if(toBeAnalyzed instanceof ObjectReference){
@@ -143,6 +143,8 @@ public class connectToMC {
 				for(Value v : ((ArrayReference) toBeAnalyzed).getValues()){
 					if(!analyzed.contains(v))
 						retval.add(getTreeOfAnyValue(v));
+					else
+						retval.add(new DefaultMutableTreeNode((v instanceof LocalVariable ? ((LocalVariable)v).signature() + " " : v instanceof com.sun.jdi.Field ? ((com.sun.jdi.Field)v).signature()+ " " : "")+v.toString() + " (not broken down)"));
 				}
 				return retval;
 			}
@@ -159,6 +161,8 @@ public class connectToMC {
 						}
 						if(!analyzed.contains(v)&&(v.toString().contains("minecraft")||v.toString().contains("mojang")))
 							retval.add(getTreeOfAnyValue(v));
+						else
+							retval.add(new DefaultMutableTreeNode((v instanceof LocalVariable ? ((LocalVariable)v).signature() + " " : v instanceof com.sun.jdi.Field ? ((com.sun.jdi.Field)v).signature()+ " " : "")+v.toString() + " (not broken down)"));
 					}
 				}
 				return retval;

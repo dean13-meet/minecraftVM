@@ -22,7 +22,7 @@ public class GUI{
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	private double width = screenSize.getWidth();
 	private double height = screenSize.getHeight();
-	final int DISPLAY_WIDTH = (int) (width/4);
+	final int DISPLAY_WIDTH = (int) (width/2);
 	final int DISPLAY_HEIGHT = (int) (height/1.2);
 	final int xOffSet = 10;
 	final int yOffSet = xOffSet;
