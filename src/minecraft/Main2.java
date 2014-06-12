@@ -10,7 +10,7 @@ public class Main2 {
 
 	
 	public static void main(final String[] args) throws FileNotFoundException{
-		
+		System.out.println("RUN M2");
 		try {
 			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt")),true));
 			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt")),true));

@@ -57,7 +57,7 @@ public class connectToMC {
 			//Do nothing as this is ok
 		}
 		ThreadReference thread = getThread(threadName);
-		Location breakLoc = breakPoint(thread);
+		Location breakLoc = breakPointInThread(thread);
 		EventSet evtSet = waitUntilBreakPointIsReached(breakLoc);
 		Value retVal = null;
 		try{
@@ -84,7 +84,10 @@ public class connectToMC {
 	}
 
 
-	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException,  AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, IncompatibleThreadStateException{
+	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, IncompatibleThreadStateException{
+		return getValueOfLocalVar(port, threadName, variableName, true);
+	}
+	public synchronized static Value getValueOfLocalVar(String port, String threadName, String variableName, boolean forceBreakPoint) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException,  AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, IncompatibleThreadStateException{
 
 		try {
 			createConnection(port);
@@ -92,8 +95,10 @@ public class connectToMC {
 			//Do nothing because this is ok
 		}
 		ThreadReference thread = getThread(threadName);
-		Location breakLoc = breakPoint(thread);
-		EventSet evtSet = waitUntilBreakPointIsReached(breakLoc);
+		EventSet evtSet = null;
+		if(forceBreakPoint){
+		Location breakLoc = breakPointInThread(thread);
+		evtSet = waitUntilBreakPointIsReached(breakLoc);}
 		Value val = null;
 		try {
 			val = getLocalVarValueInThread(thread, variableName);
@@ -104,7 +109,7 @@ public class connectToMC {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}finally{
-			evtSet.resume();}
+			if(forceBreakPoint&&evtSet!=null)evtSet.resume();}
 		return val;
 	}
 	public synchronized static Value getValueOfFieldOfLocalVar(String port, String threadName, String variableName, String fieldName) throws IOException, IllegalConnectorArgumentsException, threadNotFoundException, IncompatibleThreadStateException, AbsentInformationException, cannotFindBreakPointException, InterruptedException, breakPointNotHitException, InvalidTypeException, ClassNotLoadedException, InvocationException, couldNotFindVariableException{
@@ -317,7 +322,7 @@ public class connectToMC {
 		return vm;
 	}
 
-	public static Location breakPoint(ThreadReference thread) throws IncompatibleThreadStateException {
+	public static Location breakPointInThread(ThreadReference thread) throws IncompatibleThreadStateException {
 		if(thread==null||true){
 			for(ThreadReference r : vm.allThreads())System.out.println(r);
 			for(int i = 0 ; i < vm.allThreads().size() && (thread==null||!thread.name().contains("connector")); i++){
@@ -336,17 +341,21 @@ public class connectToMC {
 				}
 			}
 		}
+		Location retval = breakPoint(breakLoc);
+		thread.resume();
+		return retval;
+	}
+	public static Location breakPoint(Location breakLoc){
 		EventRequestManager evReqMan = vm.eventRequestManager();
 		BreakpointRequest bpReq = evReqMan.createBreakpointRequest(breakLoc);
 		bpReq.enable();
-		thread.resume();
 		return breakLoc;
 	}
 	public static EventSet waitUntilBreakPointIsReached(Location breakLoc) throws InterruptedException, breakPointNotHitException{
 		ThreadReference thread2 = null; //Same thread just as above, just after break was hit
 		EventQueue evtQueue = vm.eventQueue();
 		long startTime = System.currentTimeMillis();
-		long timeOut = 10000;
+		long timeOut = 100000;
 		outer: for(long time = 0; time<timeOut && thread2==null; time = System.currentTimeMillis()-startTime){
 			EventSet evtSet = evtQueue.remove();
 			EventIterator evtIter = evtSet.eventIterator();
@@ -360,7 +369,7 @@ public class connectToMC {
 					{
 						BreakpointEvent brEvt = (BreakpointEvent)evt;
 						thread2 = brEvt.thread();
-						System.out.println("HIT BREAKPOINT : " + thread2);
+						System.out.println("HIT BREAKPOINT : " + breakLoc + " " + thread2);
 						if(thread2!=null)return evtSet;
 						//break outer;
 					}

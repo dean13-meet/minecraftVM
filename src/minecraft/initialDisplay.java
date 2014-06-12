@@ -40,7 +40,7 @@ import exceptions.breakPointNotHitException;
 public class initialDisplay extends Display {
 	private final JLabel lblRunningThreads = new JLabel("Running Threads");
 	private final JTree tree = new JTree();
-	private TreeModel tempTree = null; //Holds the tree temporarily while displaying search info
+	//private TreeModel tempTree = null; //Holds the tree temporarily while displaying search info
 	private boolean realThreads = true;
 	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh Threads"},width/2-50, 625, 100, 50);
 	private final Button expandAllButton = new Button("expandAllButton", new expandAllCommand(this), new String[]{"Expand All"}, width/2-50, 680, 100, 50);
@@ -72,7 +72,7 @@ public class initialDisplay extends Display {
 		lblSearchBox.setVisible(true);
 
 		searchBox = new JTextField("");
-		searchBox.setBounds(width/3+50, height/8 -25, 100, 25);
+		searchBox.setBounds(width/3, height/8 -25, 150, 25);
 		add(searchBox);
 		searchBox.setVisible(true);
 
@@ -94,30 +94,7 @@ public class initialDisplay extends Display {
 			e.printStackTrace();
 		}
 
-		if(searchBox.getText().length()>0){
-			final String text = searchBox.getText();
-			if(tempTree==null)tempTree = tree.getModel();
-
-			tree.setModel(new DefaultTreeModel(
-					new DefaultMutableTreeNode("Search Results: Threads") {
-						{
-							DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode)tree.getModel().getRoot();
-							Enumeration e = rootNode.breadthFirstEnumeration();
-							while(e.hasMoreElements()){
-								DefaultMutableTreeNode nextElement = (DefaultMutableTreeNode) e.nextElement();
-								if(nextElement.toString().contains(text)){
-									TreeNode node_1 = nextElement.getPath()[0];
-									for(int i = 1 ; i < nextElement.getPath().length; i++){
-										node_1.
-									}
-								}
-							}
-
-						}
-					}
-					)
-					);
-		}
+		
 
 		repaint();
 
@@ -142,7 +119,7 @@ public class initialDisplay extends Display {
 		if(realThreads ){
 			EventSet evtSet = null;
 			try {
-				evtSet = connectToMC.waitUntilBreakPointIsReached(connectToMC.breakPoint(null));
+				evtSet = connectToMC.waitUntilBreakPointIsReached(connectToMC.breakPointInThread(null));
 				connectToMC.analyzed = new ArrayList<Value>();
 
 				tree.setModel(new DefaultTreeModel(
