@@ -22,6 +22,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.sun.jdi.IncompatibleThreadStateException;
@@ -47,6 +48,7 @@ public class initialDisplay extends Display {
 
 	private final JLabel lblSearchBox = new JLabel("Search: ");
 	private JTextField searchBox;
+	private String prevText = "";//Used to check for change in search text
 
 	public initialDisplay(int w, int h, JFrame f, GUI program) {
 		super(w, h, f, program);
@@ -94,11 +96,41 @@ public class initialDisplay extends Display {
 			e.printStackTrace();
 		}
 
-		
+
+		if(!prevText.equals(searchBox.getText())&&searchBox.getText().length()>0){
+			prevText = searchBox.getText();
+			refreshSearch();
+		}
+
 
 		repaint();
 
 	}
+
+	private void refreshSearch() {
+		if(searchBox.getText().length()==0){tree.expandRow(0);return;}
+		for (int i = 0; i < tree.getRowCount(); i++) {
+			tree.collapseRow(i);
+		}
+		DefaultMutableTreeNode node_1 = (DefaultMutableTreeNode) tree.getModel().getRoot();
+		ArrayList<DefaultMutableTreeNode> nodes = new ArrayList<DefaultMutableTreeNode>();
+		Enumeration enumerator = node_1.breadthFirstEnumeration();
+		while(enumerator.hasMoreElements()){
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumerator.nextElement();
+			if(node.getUserObject().toString().contains(searchBox.getText())){
+				nodes.add(node);
+				System.out.println(searchBox.getText() + " " + node.getUserObject());
+			}
+		}
+		for(DefaultMutableTreeNode node : nodes){
+			TreeNode[] path = node.getPath();
+			TreePath pathA = new TreePath(path);
+			tree.scrollPathToVisible(pathA);
+		}
+
+
+	}
+
 
 	public JTree getTree(){
 		return tree;
