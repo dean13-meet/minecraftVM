@@ -13,6 +13,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +60,8 @@ public class Main {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
 */		
+	
 		port = args[0];
 		try {
 			main22(args);
@@ -102,22 +103,26 @@ public class Main {
 		ProcessBuilder builder = new ProcessBuilder(args1);
 		builder.directory(ff);
 		Process process = builder.start();
-		Thread.sleep(4000);
-		
+		Thread.sleep(10000);
+		System.out.println("RESUMING");
 		try {
 			connectToMC.createConnection(args[0]);
-			Object o = connectToMC.getVM().classesByName("net.minecraft.launcher.Launcher").get(0).fieldByName("profileManager").declaringType().signature();//fieldByName("gameRunner");//.declaringType().fieldByName("processFactory").declaringType().methodsByName("startGame").get(0).location();
-			System.out.println("OUR OBJ: " + o);
-		} catch (alreadyConnectedToVM e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		/*
+			//Object o = connectToMC.getVM().classesByName("net.minecraft.launcher.Launcher").get(0).fieldByName("profileManager").declaringType().signature();//fieldByName("gameRunner");//.declaringType().fieldByName("processFactory").declaringType().methodsByName("startGame").get(0).location();
+			Iterator<ReferenceType> it = connectToMC.getVM().allClasses().iterator();
+			ReferenceType o = null;
+			while(it.hasNext()){
+				ReferenceType n = it.next();
+				//System.out.println("A CLASS: " + n.name());
+				if(n.name().contains("DirectGameProcessFactory")){
+					o = n;
+					break;
+				}
+			}
+			/*
 		ObjectReference ref = (ObjectReference) connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "minecraftLauncher")), "launcher")), "gameRunner")),"processFactory");
 		System.out.println("OBJECT LOOKING FOR: " + ref);
-
-		Location loc = ref.referenceType().methodsByName("startGame").get(0).location();
+		*/
+		Location loc = o.methodsByName("startGame").get(0).location();
 		EventSet evtSet = null;
 		try {
 			evtSet = connectToMC.waitUntilBreakPointIsReached(connectToMC.breakPoint(loc));
@@ -144,6 +149,25 @@ public class Main {
 				
 				List<Value> vals = new ArrayList<Value>();
 				System.out.println("GOT::: " + obj.invokeMethod(thread, refType.methodsByName("toString").get(0), vals, 0));
+				ObjectReference argsOfLauncher = ((ObjectReference)obj.getValue(refType.fieldByName("arguments")));
+				ReferenceType refOfArgsOfLauncher = argsOfLauncher.referenceType();
+				System.out.println("GOT THE FOLLOWING: " + argsOfLauncher + " " + refOfArgsOfLauncher);
+				for(Method m : refOfArgsOfLauncher.allMethods()){
+					System.out.println("METHOD: " + m.name() + " " + m.signature());
+				}
+				Method normalAddMethod = refOfArgsOfLauncher.methodsByName("add", "(Ljava/lang/Object;)Z").get(0);
+				Method overloadedAddMethod = refOfArgsOfLauncher.methodsByName("addAll", "(ILjava/util/Collection;)Z").get(0);
+				List<Value> vals2 = new ArrayList<Value>();
+				ObjectReference v = ((ClassType) argsOfLauncher.type()).newInstance(thread, refOfArgsOfLauncher.methodsByName("<init>", "()V").get(0), vals, 0);
+				List<Value> subVals1 = new ArrayList<Value>();
+				subVals1.add(connectToMC.getVM().mirrorOf("-Xdebug"));
+				v.invokeMethod(thread, normalAddMethod, subVals1, 0);
+				List<Value> subVals2 = new ArrayList<Value>();
+				subVals2.add(connectToMC.getVM().mirrorOf("-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="+args[1]));
+				v.invokeMethod(thread, normalAddMethod, subVals2, 0);
+				vals2.add(connectToMC.getVM().mirrorOf(1));
+				vals2.add(v);
+				argsOfLauncher.invokeMethod(thread, overloadedAddMethod, vals2, 0);
 				//System.out.println("GOT::: " + obj.getValue(refType.fieldByName("processPath")) + " " + obj.getValue(refType.fieldByName("arguments")) + " " + obj.getValue(refType.fieldByName("sysOutFilter"))+ " " + obj.getValue(refType.fieldByName("directory")));
 			} catch (threadNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -170,6 +194,12 @@ public class Main {
 		}finally{
 			if(evtSet!=null)evtSet.resume();
 		}
+		} catch (alreadyConnectedToVM e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		
 		
 		
@@ -221,6 +251,7 @@ public class Main {
 		}
 		*/
 		connectToMC.releaseConnection();
+		Main.port = args[1];
 		GUI g = new GUI();
 
 		/*

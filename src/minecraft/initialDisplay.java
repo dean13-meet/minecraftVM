@@ -12,8 +12,10 @@ import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JTextArea;
@@ -25,10 +27,12 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.Location;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
@@ -43,7 +47,7 @@ public class initialDisplay extends Display {
 	private final JTree tree = new JTree();
 	//private TreeModel tempTree = null; //Holds the tree temporarily while displaying search info
 	private boolean realThreads = true;
-	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh Threads"},width/2-50, 625, 100, 50);
+	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh"},width/2-50, 625, 100, 50);
 	private final Button expandAllButton = new Button("expandAllButton", new expandAllCommand(this), new String[]{"Expand All"}, width/2-50, 680, 100, 50);
 
 	private final JLabel lblSearchBox = new JLabel("Search: ");
@@ -97,10 +101,11 @@ public class initialDisplay extends Display {
 		}
 
 
-		if(!prevText.equals(searchBox.getText())&&searchBox.getText().length()>0){
+		if(!prevText.equals(searchBox.getText())){
 			prevText = searchBox.getText();
 			refreshSearch();
 		}
+		
 
 
 		repaint();
@@ -108,10 +113,11 @@ public class initialDisplay extends Display {
 	}
 
 	private void refreshSearch() {
-		if(searchBox.getText().length()==0){tree.expandRow(0);return;}
+		
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			tree.collapseRow(i);
 		}
+		if(searchBox.getText().length()==0){tree.expandRow(0);return;}
 		DefaultMutableTreeNode node_1 = (DefaultMutableTreeNode) tree.getModel().getRoot();
 		ArrayList<DefaultMutableTreeNode> nodes = new ArrayList<DefaultMutableTreeNode>();
 		Enumeration enumerator = node_1.breadthFirstEnumeration();
@@ -155,7 +161,9 @@ public class initialDisplay extends Display {
 				connectToMC.analyzed = new ArrayList<Value>();
 
 				tree.setModel(new DefaultTreeModel(
-						new DefaultMutableTreeNode("Threads") {
+						new DefaultMutableTreeNode("Minecraft") {
+							DefaultMutableTreeNode node_0 = new DefaultMutableTreeNode ("Threads");
+							DefaultMutableTreeNode node_00 = new DefaultMutableTreeNode ("Loaded Classes");
 							{for(ThreadReference thread : connectToMC.getVM().allThreads()){
 
 
@@ -186,10 +194,44 @@ public class initialDisplay extends Display {
 								}catch (Exception e){
 									e.printStackTrace();
 								}
-								add(node_1);
+								node_0.add(node_1);
 							}
 
 							}
+							
+							{try{for(ReferenceType n : connectToMC.getVM().allClasses()){
+								DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode(n.name());
+								for(ObjectReference nn : n.instances(0)){
+									DefaultMutableTreeNode node_2 = new DefaultMutableTreeNode(n.name());
+									
+									Map<Field,Value> nnn = nn.getValues(n.allFields());
+									Set<Field> fields = nnn.keySet();
+									Field[] fieldsA = new Field[fields.size()];
+									fields.toArray(fieldsA);
+									
+									Collection<Value> values = nnn.values();
+									Value[] valuesA = new Value[values.size()];
+									values.toArray(valuesA);
+									
+									for(int i = 0; i < nnn.size(); i++){
+										DefaultMutableTreeNode node_3 = new DefaultMutableTreeNode("FIELD: " + fieldsA[i] + " Value: " + valuesA[i]);
+										System.out.println(node_3.getUserObject());
+										node_2.add(node_3);
+									}
+									
+									node_1.add(node_2);
+								}
+								node_00.add(node_1);
+							}
+							add(node_0);
+							add(node_00);
+							}catch(IllegalArgumentException e){
+								e.printStackTrace();
+							}catch(UnsupportedOperationException e){
+								e.printStackTrace();
+							}
+							}
+							
 						}
 						));
 			}

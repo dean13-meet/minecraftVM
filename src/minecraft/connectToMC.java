@@ -161,10 +161,10 @@ public class connectToMC {
 
 					Value v = ((ObjectReference)toBeAnalyzed).getValue(f);
 					if(v!=null){
-						if(v.toString().contains("minecraft")||v.toString().contains("mojang")){
+					/*	if(v.toString().contains("minecraft")||v.toString().contains("mojang")||v.toString().contains("sun")){
 							System.out.println("HERE YOU GO" + v.toString());
-						}
-						if(!analyzed.contains(v)&&(v.toString().contains("minecraft")||v.toString().contains("mojang")))
+					     }    */	
+						if(!analyzed.contains(v))//&&(v.toString().contains("minecraft")||v.toString().contains("mojang")||v.toString().contains("sun")))
 							retval.add(getTreeOfAnyValue(v));
 						else
 							retval.add(new DefaultMutableTreeNode((v instanceof LocalVariable ? ((LocalVariable)v).signature() + " " : v instanceof com.sun.jdi.Field ? ((com.sun.jdi.Field)v).signature()+ " " : "")+v.toString() + " (not broken down)"));
