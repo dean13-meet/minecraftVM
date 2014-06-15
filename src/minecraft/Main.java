@@ -52,7 +52,7 @@ public class Main {
 	private static String port;
 
 	public static void main(final String[] args) throws InterruptedException{
-/*
+		/*
 		try {
 			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
 			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
@@ -60,8 +60,8 @@ public class Main {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-*/		
-	
+		 */		
+
 		port = args[0];
 		try {
 			main22(args);
@@ -88,8 +88,8 @@ public class Main {
 	}
 	public static void main22(final String[] args) throws IOException, IllegalConnectorArgumentsException, IncompatibleThreadStateException, InterruptedException{
 
-		
-		
+
+
 
 
 
@@ -103,13 +103,17 @@ public class Main {
 		ProcessBuilder builder = new ProcessBuilder(args1);
 		builder.directory(ff);
 		Process process = builder.start();
+
+		
 		Thread.sleep(10000);
-		System.out.println("RESUMING");
-		try {
-			connectToMC.createConnection(args[0]);
-			//Object o = connectToMC.getVM().classesByName("net.minecraft.launcher.Launcher").get(0).fieldByName("profileManager").declaringType().signature();//fieldByName("gameRunner");//.declaringType().fieldByName("processFactory").declaringType().methodsByName("startGame").get(0).location();
+		while(connectToMC.getVM()==null){
+		try{
+		connectToMC.createConnection(args[0]);}catch(Exception e){System.out.println("STILL WAITING TO CREATE A CONNECTION");}}
+		//Object o = connectToMC.getVM().classesByName("net.minecraft.launcher.Launcher").get(0).fieldByName("profileManager").declaringType().signature();//fieldByName("gameRunner");//.declaringType().fieldByName("processFactory").declaringType().methodsByName("startGame").get(0).location();
+		ReferenceType o = null;
+		while(o==null){
+			
 			Iterator<ReferenceType> it = connectToMC.getVM().allClasses().iterator();
-			ReferenceType o = null;
 			while(it.hasNext()){
 				ReferenceType n = it.next();
 				//System.out.println("A CLASS: " + n.name());
@@ -118,10 +122,13 @@ public class Main {
 					break;
 				}
 			}
-			/*
-		ObjectReference ref = (ObjectReference) connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "minecraftLauncher")), "launcher")), "gameRunner")),"processFactory");
-		System.out.println("OBJECT LOOKING FOR: " + ref);
-		*/
+			Thread.sleep(1000);
+		}
+		/*
+ObjectReference ref = (ObjectReference) connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfFieldOfAnyObjectReference(((ObjectReference)connectToMC.getValueOfLocalVarInAnyThread(args[0], "minecraftLauncher")), "launcher")), "gameRunner")),"processFactory");
+System.out.println("OBJECT LOOKING FOR: " + ref);
+		 */
+		System.out.println("RESUMING");
 		Location loc = o.methodsByName("startGame").get(0).location();
 		EventSet evtSet = null;
 		try {
@@ -142,11 +149,11 @@ public class Main {
 					}
 				}
 			}
-			
+
 			try {
 				ObjectReference obj = (ObjectReference) connectToMC.getValueOfLocalVar(getPort(), thread.name(), "processBuilder", false);
 				ReferenceType refType = obj.referenceType();
-				
+
 				List<Value> vals = new ArrayList<Value>();
 				System.out.println("GOT::: " + obj.invokeMethod(thread, refType.methodsByName("toString").get(0), vals, 0));
 				ObjectReference argsOfLauncher = ((ObjectReference)obj.getValue(refType.fieldByName("arguments")));
@@ -194,26 +201,22 @@ public class Main {
 		}finally{
 			if(evtSet!=null)evtSet.resume();
 		}
-		} catch (alreadyConnectedToVM e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
+
+
+
+
 		/*
 		System.out.println(builder.directory());
 		process.waitFor();
 		System.out.println(process.exitValue());
-		*/
-/*
+		 */
+		/*
 		try {
 			System.out.println("RUNNING MAIN1" + ((ArrayReference)connectToMC.getValueOfFieldOfLocalVar(args[0], name, "frame", "remainderArgs")).getValues());
 		} catch (threadNotFoundException e1) {
@@ -241,15 +244,16 @@ public class Main {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		
+
+
 		try {
 			connectToMC.createConnection(args[0]);
 		} catch (alreadyConnectedToVM e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
+		 */
+		System.out.println("Starting GUI");
 		connectToMC.releaseConnection();
 		Main.port = args[1];
 		GUI g = new GUI();

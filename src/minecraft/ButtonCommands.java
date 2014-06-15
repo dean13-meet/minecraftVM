@@ -48,3 +48,18 @@ class expandAllCommand extends ButtonCommands{
 	}
 	
 }
+
+class searchButtonCommand extends ButtonCommands{
+
+	initialDisplay newD;
+	searchButtonCommand(Display d) {
+		super(d);
+		this.newD = (initialDisplay) d;
+	}
+	@Override
+	void execute(int caseNum) {
+		newD.refreshSearch();
+		
+	}
+	
+}

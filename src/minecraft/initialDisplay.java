@@ -10,7 +10,11 @@ import javax.swing.JTree;
 
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -49,6 +53,7 @@ public class initialDisplay extends Display {
 	private boolean realThreads = true;
 	private final Button refreshButton = new Button("refreshButton", new refreshThreadCommand(this), new String[] {"Refresh"},width/2-50, 625, 100, 50);
 	private final Button expandAllButton = new Button("expandAllButton", new expandAllCommand(this), new String[]{"Expand All"}, width/2-50, 680, 100, 50);
+	private final Button searchButton = new Button("searchButton", new searchButtonCommand(this), new String[]{"Search"}, width/3 + 175, height/8 -25,100,50);
 
 	private final JLabel lblSearchBox = new JLabel("Search: ");
 	private JTextField searchBox;
@@ -62,6 +67,15 @@ public class initialDisplay extends Display {
 	@Override
 	protected void init() {
 
+		try {
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
+			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
 		add(lblRunningThreads);
 		lblRunningThreads.setBounds(30, 50, 200, 30);
 		JScrollPane treeView = new JScrollPane(tree);
@@ -71,6 +85,7 @@ public class initialDisplay extends Display {
 		(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		add(refreshButton);
 		add(expandAllButton);
+		add(searchButton);
 
 
 		lblSearchBox.setBounds(width/3-50, height/8 -25, 100, 25);
@@ -100,19 +115,11 @@ public class initialDisplay extends Display {
 			e.printStackTrace();
 		}
 
-
-		if(!prevText.equals(searchBox.getText())){
-			prevText = searchBox.getText();
-			refreshSearch();
-		}
-		
-
-
 		repaint();
 
 	}
 
-	private void refreshSearch() {
+	public void refreshSearch() {
 		
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			tree.collapseRow(i);
@@ -140,6 +147,14 @@ public class initialDisplay extends Display {
 
 	public JTree getTree(){
 		return tree;
+	}
+	
+	public boolean checkString(String str){
+		String[] strings = new String[]{"java", "sun", "apache", "joptsimple", "apple", "char", "boolean", "byte", "long", "int", "short", "float", "double","google", "netty", "opengl"};
+		for(String s : strings){
+			if(str.contains(s))return false;
+		}
+		return true;
 	}
 	public void refreshThreads() {
 		try {
@@ -199,11 +214,19 @@ public class initialDisplay extends Display {
 
 							}
 							
-							{try{for(ReferenceType n : connectToMC.getVM().allClasses()){
-								DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode(n.name());
+							{for(ReferenceType n : connectToMC.getVM().allClasses()){
+								//System.out.println(n + ": " + n.fields() ); if(true)continue;
+								//if(!(n.name().contains("mojang")||n.name().contains("minecraft")))continue;
+								try{DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode(n.toString());
+								
+								if(checkString(n.name())){
+									System.out.println("REF: " + node_1.getUserObject());
+								
 								for(ObjectReference nn : n.instances(0)){
-									DefaultMutableTreeNode node_2 = new DefaultMutableTreeNode(n.name());
 									
+									DefaultMutableTreeNode node_2 = new DefaultMutableTreeNode(nn.toString());
+									System.out.println("OBJ: " + node_2.getUserObject());
+									try{
 									Map<Field,Value> nnn = nn.getValues(n.allFields());
 									Set<Field> fields = nnn.keySet();
 									Field[] fieldsA = new Field[fields.size()];
@@ -214,22 +237,25 @@ public class initialDisplay extends Display {
 									values.toArray(valuesA);
 									
 									for(int i = 0; i < nnn.size(); i++){
+										try{
 										DefaultMutableTreeNode node_3 = new DefaultMutableTreeNode("FIELD: " + fieldsA[i] + " Value: " + valuesA[i]);
 										System.out.println(node_3.getUserObject());
 										node_2.add(node_3);
+										}catch(Exception e){e.printStackTrace();}
+										
 									}
-									
+									}catch(Exception e){e.printStackTrace();}
 									node_1.add(node_2);
-								}
+								}}
 								node_00.add(node_1);
-							}
-							add(node_0);
-							add(node_00);
 							}catch(IllegalArgumentException e){
 								e.printStackTrace();
 							}catch(UnsupportedOperationException e){
 								e.printStackTrace();
 							}
+							
+							}add(node_0);
+							add(node_00);
 							}
 							
 						}
