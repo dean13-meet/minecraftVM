@@ -3,11 +3,13 @@ package minecraft;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
@@ -20,6 +22,7 @@ import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.Location;
 import com.sun.jdi.Method;
+import com.sun.jdi.Mirror;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
@@ -175,6 +178,68 @@ public class connectToMC {
 		}
 		return retval;
 	}
+	
+	
+	public static List<Object> analyzedInMethod2 = new ArrayList<Object>();
+	public static synchronized DefaultMutableTreeNode getTreeOfField(Map<? extends Mirror, ? extends Mirror> m){
+		Mirror[] keys = new Mirror[1];
+		keys = m.keySet().toArray(keys);
+		Mirror[] values = new Mirror[1];
+		values = m.values().toArray(values);
+		DefaultMutableTreeNode node_00 = new DefaultMutableTreeNode("Analyzing Group");
+		System.out.println(node_00.getUserObject());
+		for(int n = 0; n < keys.length; n++){
+			Mirror f = keys[n];
+			Mirror v = values[n];
+			DefaultMutableTreeNode node_1 = null;
+		    if(v instanceof ObjectReference){
+				ObjectReference vv = (ObjectReference)v;
+				if(analyzedInMethod2.contains(vv)){
+					node_1 = new DefaultMutableTreeNode("Already Analyzed: (f, v) " +f +" , " + v);
+					System.out.println(node_1.getUserObject());
+					node_00.add(node_1);
+					continue;
+				}
+				analyzedInMethod2.add(vv);
+				
+			}
+			
+			
+			if(f instanceof com.sun.jdi.Field){
+				node_1 = new DefaultMutableTreeNode("FIELD: " + f + " VALUE: " + v);
+				System.out.println(node_1.getUserObject());
+				if(v instanceof ObjectReference){
+					ObjectReference obj = (ObjectReference)v;
+					ReferenceType ref = obj.referenceType();
+					node_1.add(getTreeOfField(obj.getValues(ref.allFields())));
+					System.out.println(node_1.getUserObject());
+				}else if(v instanceof ArrayReference){
+					ArrayReference arr = (ArrayReference)v;
+					Map<Value, Value> mm = new HashMap<Value, Value>();
+					for(Value vv : arr.getValues()){
+						mm.put(vv, vv);
+					}
+					node_1.add(getTreeOfField(mm));
+					System.out.println(node_1.getUserObject());
+				}
+			}else if(f instanceof ObjectReference && !(f instanceof StringReference||f instanceof ThreadReference || f instanceof ThreadGroupReference)){
+				node_1 = new DefaultMutableTreeNode("OBJECT REFERENCE: " + f);
+				System.out.println(node_1.getUserObject());
+				ObjectReference obj = (ObjectReference)v;
+				ReferenceType ref = obj.referenceType();
+				node_1.add(getTreeOfField(obj.getValues(ref.allFields())));
+				System.out.println(node_1.getUserObject());
+			}else{
+				node_1 = new DefaultMutableTreeNode(f + " , " + v);
+				System.out.println(node_1.getUserObject());
+			}
+			node_00.add(node_1);
+		}return node_00;
+	}
+	
+	
+
+
 	public static Value getValueOfLocalVarInAnyThread(String port, String variableName){
 		Value retval = null;
 		try{

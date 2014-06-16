@@ -68,8 +68,8 @@ public class initialDisplay extends Display {
 	protected void init() {
 
 		try {
-			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
-			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMain.txt")),true));
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMainDetailed.txt")),true));
+			System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("outputMainDetailed.txt")),true));
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -228,22 +228,14 @@ public class initialDisplay extends Display {
 									System.out.println("OBJ: " + node_2.getUserObject());
 									try{
 									Map<Field,Value> nnn = nn.getValues(n.allFields());
-									Set<Field> fields = nnn.keySet();
-									Field[] fieldsA = new Field[fields.size()];
-									fields.toArray(fieldsA);
 									
-									Collection<Value> values = nnn.values();
-									Value[] valuesA = new Value[values.size()];
-									values.toArray(valuesA);
-									
-									for(int i = 0; i < nnn.size(); i++){
 										try{
-										DefaultMutableTreeNode node_3 = new DefaultMutableTreeNode("FIELD: " + fieldsA[i] + " Value: " + valuesA[i]);
-										System.out.println(node_3.getUserObject());
+										DefaultMutableTreeNode node_3 = connectToMC.getTreeOfField(nnn);
+										//System.out.println(node_3.getUserObject());
 										node_2.add(node_3);
 										}catch(Exception e){e.printStackTrace();}
 										
-									}
+									
 									}catch(Exception e){e.printStackTrace();}
 									node_1.add(node_2);
 								}}
